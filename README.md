@@ -25,4 +25,19 @@ Notas:
 - `pom.xml` ahora depende de `mysql:mysql-connector-java:8.0.33`.
 
 
+Ejemplos funcionando: 
+<img width="1462" height="932" alt="image" src="https://github.com/user-attachments/assets/864e34c2-cbb3-4721-87dc-6137bc9135b3" />
+<img width="1196" height="833" alt="image" src="https://github.com/user-attachments/assets/c7928f56-ec46-4d8e-925b-40c215a2b955" />
+<img width="1198" height="830" alt="image" src="https://github.com/user-attachments/assets/da5e81a7-d605-4be7-91ad-307da066d931" />
+<img width="1193" height="826" alt="image" src="https://github.com/user-attachments/assets/3cb81544-574a-43b9-93fb-ec335f535cbf" />
+<img width="1195" height="837" alt="image" src="https://github.com/user-attachments/assets/4c47954d-ccff-4929-8bb2-1e7dd7c40bdf" />
+
+
+
+
+
+
+
+
+
 
