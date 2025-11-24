@@ -24,5 +24,5 @@ Notas:
 - `src/main/java/es/clubdama/dao/JdbcUtil.java` ahora usa `com.mysql.cj.jdbc.Driver` y lee la conexión desde variables de entorno con valores por defecto.
 - `pom.xml` ahora depende de `mysql:mysql-connector-java:8.0.33`.
 
-Si quieres, puedo también actualizar `data/schema_from_user.sql` o añadir un script `init-db.sql` para crear las tablas necesarias automáticamente.
+
 
