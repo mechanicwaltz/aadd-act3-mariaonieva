@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/data/fix_collation_club_dama.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/data/init_db.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/data/unify_collation.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/data/unify_collation_routines.sql" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/data/unify_collation_tables.sql" dialect="MySQL" />
+    <file url="PROJECT" dialect="MySQL" />
+  </component>
+</project>

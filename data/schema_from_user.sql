@@ -1,0 +1,1 @@
+-- El script SQL original se incluyó como PDF en /docs
