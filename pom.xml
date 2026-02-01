@@ -12,9 +12,21 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
       <version>8.0.33</version>
+    </dependency>
+    <!-- Jakarta Persistence API -->
+    <dependency>
+      <groupId>jakarta.persistence</groupId>
+      <artifactId>jakarta.persistence-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+    <!-- Hibernate ORM compatible con Jakarta -->
+    <dependency>
+      <groupId>org.hibernate.orm</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>6.2.7.Final</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -56,7 +68,17 @@
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M7</version>
+        <version>3.0.0</version>
+        <configuration>
+          <!-- Pasar la propiedad experimental de Byte Buddy y abrir módulos para instrumentación en Java 21 -->
+          <argLine>-Dnet.bytebuddy.experimental=true --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED</argLine>
+          <systemPropertyVariables>
+            <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+          </systemPropertyVariables>
+          <!-- Aumentar el timeout y forzar el fork para aislar la JVM de pruebas -->
+          <forkCount>1</forkCount>
+          <reuseForks>false</reuseForks>
+        </configuration>
       </plugin>
       <!-- Plugin para ejecutar JavaFX fácilmente -->
       <plugin>
