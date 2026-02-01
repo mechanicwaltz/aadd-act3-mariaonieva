@@ -32,12 +32,26 @@ Ejemplos funcionando:
 <img width="1193" height="826" alt="image" src="https://github.com/user-attachments/assets/3cb81544-574a-43b9-93fb-ec335f535cbf" />
 <img width="1195" height="837" alt="image" src="https://github.com/user-attachments/assets/4c47954d-ccff-4929-8bb2-1e7dd7c40bdf" />
 
+# Club DAMA - instrucciones de compilación
 
+Para compilar y ejecutar la aplicación necesitas Maven (3.6+) y JDK 17.
 
+Usa el wrapper proporcionado `mvnw` / `mvnw.cmd` que llama a `mvn` si está instalado. Si no tienes Maven instalado, instala Maven en tu sistema:
 
+- Windows (chocolatey): choco install maven
+- Linux (Debian/Ubuntu): sudo apt-get install maven
+- Mac (Homebrew): brew install maven
 
+Compilar (sin tests):
 
+```powershell
+./mvnw -DskipTests package
+```
 
+Ejecutar la aplicación (JavaFX):
 
+```powershell
+./mvnw javafx:run
+```
 
-
+Si prefieres instalar el Maven Wrapper oficial (maven-wrapper.jar), puedes generarlo localmente con `mvn -N io.takari:maven:wrapper` y comitear los archivos generados.
