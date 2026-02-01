@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS socios (
 -- Tabla pistas
 CREATE TABLE IF NOT EXISTS pistas (
   id_pista VARCHAR(36) PRIMARY KEY,
-  deporte ENUM('tenis','padel','futbol_sala') NOT NULL,
+  deporte VARCHAR(50) NOT NULL,
   descripcion VARCHAR(200),
   disponible TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
