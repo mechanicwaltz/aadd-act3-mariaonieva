@@ -1,7 +1,7 @@
 package es.clubdama.dao;
 import es.clubdama.model.Pista;
-import java.sql.*;
-import java.util.ArrayList;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 /**
@@ -9,58 +9,62 @@ import java.util.List;
  */
 public class PistaDao {
     /** Inserta una nueva pista. */
-    public void insertar(Pista p) throws SQLException {
-        String sql="INSERT INTO pistas(id_pista,deporte,descripcion,disponible) VALUES(?,?,?,?)";
-        try(Connection c=JdbcUtil.getConnection(); PreparedStatement ps=c.prepareStatement(sql)){
-            ps.setString(1,p.getIdPista());
-            ps.setString(2,p.getDeporte());
-            ps.setString(3,p.getDescripcion());
-            ps.setBoolean(4,p.isDisponible());
-            ps.executeUpdate();
-        }
+    public void insertar(Pista p) {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(p);
+            em.getTransaction().commit();
+        } catch (RuntimeException ex) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw ex;
+        } finally { em.close(); }
     }
     /** Busca una pista por su id. */
-    public Pista buscarPorId(String id) throws SQLException {
-        String sql="SELECT id_pista,deporte,descripcion,disponible FROM pistas WHERE id_pista=?";
-        try(Connection c=JdbcUtil.getConnection(); PreparedStatement ps=c.prepareStatement(sql)){
-            ps.setString(1,id);
-            try(ResultSet rs=ps.executeQuery()){
-                if(rs.next()){
-                    Pista p=new Pista();
-                    p.setIdPista(rs.getString("id_pista"));
-                    p.setDeporte(rs.getString("deporte"));
-                    p.setDescripcion(rs.getString("descripcion"));
-                    p.setDisponible(rs.getBoolean("disponible"));
-                    return p;
-                }
-            }
-        }
-        return null;
+    public Pista buscarPorId(String id) {
+        if (id == null || id.isEmpty()) return null;
+        EntityManager em = JpaUtil.getEntityManager();
+        try { return em.find(Pista.class,id); } finally { em.close(); }
     }
     /** Lista todas las pistas. */
-    public List<Pista> listarTodos() throws SQLException {
-        List<Pista> out=new ArrayList<>();
-        String sql="SELECT id_pista,deporte,descripcion,disponible FROM pistas";
-        try(Connection c=JdbcUtil.getConnection(); PreparedStatement ps=c.prepareStatement(sql);
-            ResultSet rs=ps.executeQuery()){
-            while(rs.next()){
-                Pista p=new Pista();
-                p.setIdPista(rs.getString("id_pista"));
-                p.setDeporte(rs.getString("deporte"));
-                p.setDescripcion(rs.getString("descripcion"));
-                p.setDisponible(rs.getBoolean("disponible"));
-                out.add(p);
-            }
+    public List<Pista> listarTodos() {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            TypedQuery<Pista> q = em.createQuery("SELECT p FROM Pista p", Pista.class);
+            return q.getResultList();
+        } finally {
+            em.close();
         }
-        return out;
+    }
+
+    /** Lista todas las pistas con sus reservas cargadas. */
+    public List<Pista> listarTodosConReservas() {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            TypedQuery<Pista> q = em.createQuery(
+                "SELECT DISTINCT p FROM Pista p LEFT JOIN FETCH p.reservas",
+                Pista.class);
+            return q.getResultList();
+        } finally {
+            em.close();
+        }
     }
     /** Actualiza la disponibilidad de una pista. */
-    public void actualizarDisponibilidad(String idPista, boolean disponible) throws SQLException {
-        String sql = "UPDATE pistas SET disponible = ? WHERE id_pista = ?";
-        try (Connection c = JdbcUtil.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setBoolean(1, disponible);
-            ps.setString(2, idPista);
-            ps.executeUpdate();
-        }
+    public void actualizarDisponibilidad(String idPista, boolean disponible) {
+        if (idPista == null || idPista.isEmpty())
+            throw new IllegalArgumentException("ID de pista no puede ser nulo o vacío");
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Pista p = em.find(Pista.class, idPista);
+            if (p != null) {
+                p.setDisponible(disponible);
+                em.merge(p);
+            }
+            em.getTransaction().commit();
+        } catch (RuntimeException ex) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw ex;
+        } finally { em.close(); }
     }
 }
