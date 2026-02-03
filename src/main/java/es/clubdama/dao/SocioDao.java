@@ -1,26 +1,31 @@
 package es.clubdama.dao;
 import es.clubdama.model.Socio;
-import java.sql.*;
-import java.util.ArrayList;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 /**
- * DAO para la entidad Socio: operaciones CRUD mínimas contra la tabla `socios`.
+ * - Escritura: transacción begin/commit/rollback
+ * - Lectura: sin transacción (read-only)
+ * - Cierre: siempre en finally block
  */
 public class SocioDao {
     /**
-     * Inserta un nuevo socio en la base de datos.
+     * Inserta un nuevo socio en la base de datos usando JPA.
+     * @throws RuntimeException si hay error de persistencia o constraint
      */
-    public void insertar(Socio s) throws SQLException {
-        String sql = "INSERT INTO socios(id_socio,dni,nombre,apellidos,telefono,email) VALUES(?,?,?,?,?,?)";
-        try(Connection c=JdbcUtil.getConnection(); PreparedStatement ps=c.prepareStatement(sql)){
-            ps.setString(1,s.getIdSocio());
-            ps.setString(2,s.getDni());
-            ps.setString(3,s.getNombre());
-            ps.setString(4,s.getApellidos());
-            ps.setString(5,s.getTelefono());
-            ps.setString(6,s.getEmail());
-            ps.executeUpdate();
+    public void insertar(Socio s) {
+        if (s == null) throw new IllegalArgumentException("Socio no puede ser nulo");
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(s);
+            em.getTransaction().commit();
+        } catch (RuntimeException ex) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw ex;
+        } finally {
+            em.close();
         }
     }
 
@@ -28,54 +33,61 @@ public class SocioDao {
      * Busca un socio por su identificador.
      * @return objeto Socio o null si no existe
      */
-    public Socio buscarPorId(String id) throws SQLException {
-        String sql="SELECT id_socio,dni,nombre,apellidos,telefono,email FROM socios WHERE id_socio=?";
-        try(Connection c=JdbcUtil.getConnection(); PreparedStatement ps=c.prepareStatement(sql)){
-            ps.setString(1,id);
-            try(ResultSet rs=ps.executeQuery()){
-                if(rs.next()){
-                    Socio s=new Socio();
-                    s.setIdSocio(rs.getString("id_socio"));
-                    s.setDni(rs.getString("dni"));
-                    s.setNombre(rs.getString("nombre"));
-                    s.setApellidos(rs.getString("apellidos"));
-                    s.setTelefono(rs.getString("telefono"));
-                    s.setEmail(rs.getString("email"));
-                    return s;
-                }
-            }
+    public Socio buscarPorId(String id) {
+        if (id == null || id.isEmpty()) return null;
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            return em.find(Socio.class, id);
+        } finally {
+            em.close();
         }
-        return null;
     }
 
     /**
      * Lista todos los socios.
+     * Nota: Las reservas se cargan como lazy (no se cargan aquí).
+     * Si necesitas reservas, usa LEFT JOIN FETCH.
      */
-    public List<Socio> listarTodos() throws SQLException {
-        List<Socio> out=new ArrayList<>();
-        String sql="SELECT id_socio,dni,nombre,apellidos,telefono,email FROM socios";
-        try(Connection c=JdbcUtil.getConnection(); PreparedStatement ps=c.prepareStatement(sql);
-            ResultSet rs=ps.executeQuery()){
-            while(rs.next()){
-                Socio s=new Socio();
-                s.setIdSocio(rs.getString("id_socio"));
-                s.setDni(rs.getString("dni"));
-                s.setNombre(rs.getString("nombre"));
-                s.setApellidos(rs.getString("apellidos"));
-                s.setTelefono(rs.getString("telefono"));
-                s.setEmail(rs.getString("email"));
-                out.add(s);
-            }
+    public List<Socio> listarTodos() {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            TypedQuery<Socio> q = em.createQuery("SELECT s FROM Socio s", Socio.class);
+            return q.getResultList();
+        } finally {
+            em.close();
         }
-        return out;
+    }
+
+    /**
+     * Lista todos los socios con sus reservas cargadas.
+     * Usa LEFT JOIN FETCH para evitar LazyInitializationException.
+     */
+    public List<Socio> listarTodosConReservas() {
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            TypedQuery<Socio> q = em.createQuery(
+                "SELECT DISTINCT s FROM Socio s LEFT JOIN FETCH s.reservas",
+                Socio.class);
+            return q.getResultList();
+        } finally {
+            em.close();
+        }
     }
 
     // Nuevo: eliminar socio por id
-    public void borrarPorId(String id) throws SQLException {
-        String sql = "DELETE FROM socios WHERE id_socio = ?";
-        try (Connection c = JdbcUtil.getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, id);
-            ps.executeUpdate();
+    public void borrarPorId(String id) {
+        if (id == null || id.isEmpty()) throw new IllegalArgumentException("ID no puede ser nulo o vacío");
+        EntityManager em = JpaUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            Socio s = em.find(Socio.class, id);
+            if (s != null) em.remove(s);
+            em.getTransaction().commit();
+        } catch (RuntimeException ex) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            throw ex;
+        } finally {
+            em.close();
         }
     }
 }
