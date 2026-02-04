@@ -9,9 +9,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.control.Button;
 
 import java.time.LocalDate;
-import java.util.function.Consumer;
 import es.clubdama.model.Socio;
 import es.clubdama.model.Reserva;
 import es.clubdama.model.Pista;
@@ -31,12 +31,7 @@ public class DashboardView extends BorderPane {
         c1.setCellValueFactory(p -> new javafx.beans.property.SimpleStringProperty(p.getValue().getIdSocio()));
         TableColumn<Socio, String> c2 = new TableColumn<>("Nombre");
         c2.setCellValueFactory(p -> new javafx.beans.property.SimpleStringProperty(p.getValue().getNombre()));
-        tablaSocios.getColumns().addAll(c1, c2);
-        try {
-            tablaSocios.getItems().addAll(club.listarSocios());
-        } catch (Exception e) {
-            showError("No se pudieron cargar los socios: " + e.getMessage());
-        }
+        tablaSocios.getColumns().addAll(java.util.List.of(c1, c2));
 
         TableView<Pista> tablaPistas = new TableView<>();
         TableColumn<Pista, String> p1 = new TableColumn<>("ID");
@@ -45,12 +40,7 @@ public class DashboardView extends BorderPane {
         p2.setCellValueFactory(p -> new javafx.beans.property.SimpleStringProperty(p.getValue().getDeporte()));
         TableColumn<Pista, String> p3 = new TableColumn<>("Disponible");
        p3.setCellValueFactory(p -> new javafx.beans.property.SimpleStringProperty(String.valueOf(p.getValue().isDisponible())));
-        tablaPistas.getColumns().addAll(p1, p2, p3);
-        try {
-            tablaPistas.getItems().addAll(club.listarPistas());
-        } catch (Exception e) {
-            showError("No se pudieron cargar las pistas: " + e.getMessage());
-        }
+        tablaPistas.getColumns().addAll(java.util.List.of(p1, p2, p3));
 
         TableView<Reserva> tablaReservas = new TableView<>();
         TableColumn<Reserva, String> r1 = new TableColumn<>("ID");
@@ -65,16 +55,20 @@ public class DashboardView extends BorderPane {
         r5.setCellValueFactory(p -> new javafx.beans.property.SimpleStringProperty(p.getValue().getHoraInicio() != null ? p.getValue().getHoraInicio().toString() : ""));
         TableColumn<Reserva, String> r6 = new TableColumn<>("Min");
          r6.setCellValueFactory(p -> new javafx.beans.property.SimpleStringProperty(String.valueOf(p.getValue().getDuracionMin())));
-        tablaReservas.getColumns().addAll(r1, r2, r3, r4, r5, r6);
-        // Cargar reservas de hoy por pista
-        try {
-            LocalDate hoy = LocalDate.now();
-            for (Pista pista : club.listarPistas()) {
-                tablaReservas.getItems().addAll(club.reservasPorPistaYFecha(pista.getIdPista(), hoy));
-            }
-        } catch (Exception e) {
-            showError("No se pudieron cargar las reservas: " + e.getMessage());
-        }
+        tablaReservas.getColumns().addAll(java.util.List.of(r1, r2, r3, r4, r5, r6));
+
+        // Botón refrescar
+        Button btnRefresh = new Button("Refrescar");
+        btnRefresh.setOnAction(e -> {
+            loadSocios(tablaSocios, club);
+            loadPistas(tablaPistas, club);
+            loadReservas(tablaReservas, club);
+        });
+
+        // Cargar inicialmente
+        loadSocios(tablaSocios, club);
+        loadPistas(tablaPistas, club);
+        loadReservas(tablaReservas, club);
 
         BorderPane center = new BorderPane();
         center.setTop(new Label("Socios"));
@@ -85,9 +79,28 @@ public class DashboardView extends BorderPane {
         setCenter(center);
         setRight(right);
         setBottom(tablaReservas);
+        setLeft(btnRefresh);
     }
 
-    private void showError(String msg) {
+    private static void loadSocios(TableView<Socio> tabla, ClubDeportivo club) {
+        tabla.getItems().clear();
+        try { tabla.getItems().addAll(club.listarSocios()); } catch (Exception e) { showErrorStatic("No se pudieron cargar los socios: "+e.getMessage()); }
+    }
+    private static void loadPistas(TableView<Pista> tabla, ClubDeportivo club) {
+        tabla.getItems().clear();
+        try { tabla.getItems().addAll(club.listarPistas()); } catch (Exception e) { showErrorStatic("No se pudieron cargar las pistas: "+e.getMessage()); }
+    }
+    private static void loadReservas(TableView<Reserva> tabla, ClubDeportivo club) {
+        tabla.getItems().clear();
+        try {
+            LocalDate hoy = LocalDate.now();
+            for (Pista pista : club.listarPistas()) {
+                tabla.getItems().addAll(club.reservasPorPistaYFecha(pista.getIdPista(), hoy));
+            }
+        } catch (Exception e) { showErrorStatic("No se pudieron cargar las reservas: "+e.getMessage()); }
+    }
+
+    private static void showErrorStatic(String msg) {
         Alert a = new Alert(Alert.AlertType.ERROR, msg, ButtonType.OK);
         a.setHeaderText("Error");
         a.showAndWait();
