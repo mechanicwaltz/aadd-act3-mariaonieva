@@ -3,6 +3,7 @@ package es.clubdama.vista;
 import es.clubdama.model.*;
 import es.clubdama.service.ClubDeportivo;
 import es.clubdama.vista.views.*;
+import es.clubdama.dao.JpaUtil;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -113,8 +114,12 @@ public class MainApp extends Application {
 
     @Override
     public void stop() throws Exception {
-        // No auto-guardamos a fichero; todo se persiste directamente en BD por las vistas
-        super.stop();
+        // Cerrar EntityManagerFactory para liberar recursos al salir
+        try {
+            JpaUtil.close();
+        } finally {
+            super.stop();
+        }
     }
 
     /**
