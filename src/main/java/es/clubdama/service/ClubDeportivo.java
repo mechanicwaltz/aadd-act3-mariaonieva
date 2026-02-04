@@ -10,9 +10,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 /**
- * Servicio que implementa la lógica de negocio del club.
- *
- * Nota importante: la creación de reservas delega en el procedimiento almacenado
+ la creación de reservas delega en el procedimiento almacenado
  * definido en la base de datos (sp_crear_reserva). El cálculo del precio se realiza
  * mediante la función almacenada fn_precio_reserva (llamada desde el procedimiento).
  */
@@ -41,13 +39,11 @@ public class ClubDeportivo {
      */
     public String crearReserva(String idSocio, String idPista, LocalDate fecha, LocalTime hora, int duracion) throws Exception {
         if(duracion<=0) throw new IllegalArgumentException("Duración inválida");
-        // optionally check existence
         Socio s = socioDao.buscarPorId(idSocio);
         if(s==null) throw new IllegalArgumentException("Socio inexistente: "+idSocio);
         Pista p = pistaDao.buscarPorId(idPista);
         if(p==null) throw new IllegalArgumentException("Pista inexistente: "+idPista);
         if(!p.isDisponible()) throw new IllegalStateException("Pista no operativa: "+idPista);
-        // delegate to stored procedure for overlaps
         return reservaDao.crearReserva(idSocio,idPista,fecha,hora,duracion);
     }
 
@@ -89,17 +85,16 @@ public class ClubDeportivo {
         return pistaDao.buscarPorId(id) != null;
     }
 
-    // Nuevo: validar hora (cadena HH:mm)
+
     public boolean validarHoraString(String hora) {
         return ValidationUtil.isValidHora(hora);
     }
 
-    // Nuevo: cancelar reserva
     public void cancelarReserva(String idReserva) throws Exception {
         reservaDao.cancelarReserva(idReserva);
     }
 
-    // Nuevo: cambiar disponibilidad de pista
+
     public void cambiarDisponibilidadPista(String idPista, boolean disponible) throws Exception {
         Pista p = pistaDao.buscarPorId(idPista);
         if (p == null) throw new IllegalArgumentException("Pista inexistente: " + idPista);
@@ -110,12 +105,12 @@ public class ClubDeportivo {
         pistaDao.actualizarDisponibilidad(idPista, disponible);
     }
 
-    // Nuevo: calcular precio a través de DAO
+
     public double calcularPrecioReserva(int minutos) throws Exception {
         return reservaDao.calcularPrecio(minutos);
     }
 
-    // Nuevo: listar reservas de hoy (agregando reservas por pista)
+
     public java.util.List<es.clubdama.model.Reserva> listarReservasHoy() throws Exception {
         java.util.List<es.clubdama.model.Reserva> out = new java.util.ArrayList<>();
         java.time.LocalDate hoy = java.time.LocalDate.now();
@@ -125,7 +120,7 @@ public class ClubDeportivo {
         return out;
     }
 
-    // Nuevo: eliminar socio (ya existe bajaSocio) - ya implementado
+
     public void bajaSocio(String idSocio) throws Exception {
         if (idSocio == null || idSocio.isEmpty()) throw new IllegalArgumentException("idSocio requerido");
         java.util.List<es.clubdama.model.Reserva> reservas = reservaDao.listarPorSocio(idSocio);
@@ -133,5 +128,10 @@ public class ClubDeportivo {
             throw new IllegalStateException("No se puede eliminar el socio: tiene reservas activas");
         }
         socioDao.borrarPorId(idSocio);
+    }
+
+
+    public java.util.List<es.clubdama.model.Reserva> listarReservasTodas() throws Exception {
+        return reservaDao.listarTodas();
     }
 }
