@@ -43,6 +43,8 @@ public class SocioFormView extends GridPane {
                 s.setEmail(email.getText());
                 // Validaciones en servicio (unicidad, email)
                 club.crearSocio(s);
+                // limpiar campos
+                id.clear(); dni.clear(); nombre.clear(); apellidos.clear(); tel.clear(); email.clear();
                 showInfo("Socio insertado correctamente");
             } catch (Exception ex) {
                 showError(ex.getMessage());
