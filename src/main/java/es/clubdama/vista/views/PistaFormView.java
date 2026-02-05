@@ -36,6 +36,8 @@ public class PistaFormView extends GridPane {
                 p.setDescripcion(descripcion.getText());
                 p.setDisponible(disponible.isSelected());
                 club.crearPista(p);
+                // limpiar campos
+                id.clear(); deporte.setValue(null); descripcion.clear(); disponible.setSelected(false);
                 showInfo("Pista insertada correctamente");
             } catch (Exception ex) {
                 showError(ex.getMessage());
