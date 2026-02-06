@@ -7,7 +7,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 
 /**
@@ -26,6 +25,7 @@ public class ReservaFormView extends GridPane {
         Spinner<Integer> duracion = new Spinner<>(30, 300, 60, 30);
         TextField precio = new TextField();
         Button crear = new Button("Reservar");
+        Button refrescar = new Button("Refrescar");
 
         addRow(0, new Label("Socio*"), idSocio);
         addRow(1, new Label("Pista*"), idPista);
@@ -34,13 +34,21 @@ public class ReservaFormView extends GridPane {
         addRow(4, new Label("Duración (min)"), duracion);
         addRow(5, new Label("Precio (€)"), precio);
         add(crear, 1, 6);
+        add(refrescar, 0, 6);
 
-        try {
-            idSocio.getItems().addAll(club.listarSocios());
-            idPista.getItems().addAll(club.listarPistas());
-        } catch (Exception ex) {
-            showError("No se pudieron cargar socios/pistas: " + ex.getMessage());
-        }
+        Runnable load = () -> {
+            idSocio.getItems().clear();
+            idPista.getItems().clear();
+            try {
+                idSocio.getItems().addAll(club.listarSocios());
+                idPista.getItems().addAll(club.listarPistas());
+            } catch (Exception ex) {
+                showError("No se pudieron cargar socios/pistas: " + ex.getMessage());
+            }
+        };
+
+        // Cargar inicialmente
+        load.run();
 
         // inicializar y actualizar precio al cambiar duración
         try {
@@ -58,6 +66,8 @@ public class ReservaFormView extends GridPane {
             }
         });
 
+        refrescar.setOnAction(e -> load.run());
+
         crear.setOnAction(e -> {
             try {
                 if (idSocio.getValue()==null) throw new IllegalArgumentException("Seleccione socio");
@@ -67,6 +77,7 @@ public class ReservaFormView extends GridPane {
                 java.time.LocalTime t = java.time.LocalTime.parse(horaText);
                 String nuevaId = club.crearReserva(idSocio.getValue().getIdSocio(), idPista.getValue().getIdPista(), fecha.getValue(), t, duracion.getValue());
                 showInfo("Reserva creada con id: " + nuevaId);
+                // opcional: recargar reservas si hace falta (no afecta socios/pistas)
             } catch (Exception ex) {
                 showError(ex.getMessage());
             }
